@@ -1,8 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
 using System.Security.Principal;
 using System.ServiceProcess;
+using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace DnsOverride
 {
@@ -10,7 +14,7 @@ namespace DnsOverride
     {
         private const string ServiceName = "DnsOverride";
 
-        static void Main()
+        static async Task Main()
         {
             if (Environment.UserInteractive)
             {
@@ -52,11 +56,6 @@ namespace DnsOverride
                     return true;
             }
             return false;
-        }
-
-        private static void InstallService()
-        {
-            
         }
 
         public static bool IsUserAdministrator()

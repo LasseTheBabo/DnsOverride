@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net.Http;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +17,8 @@ namespace DnsOverride
     public partial class Service1 : ServiceBase
     {
         private Timer timer;
+        string hosts = Path.Combine(Environment.SystemDirectory, @"drivers\etc\hosts");
+        string url = "https://raw.githubusercontent.com/LasseTheBabo/files/master/hosts";
 
         public Service1()
         {
@@ -26,11 +30,12 @@ namespace DnsOverride
             Log("DnsOverride gestartet.");
 
             timer = new Timer(60 * 1000);
-            timer.Elapsed += ((sernder, e) => SetDns());
+            timer.Elapsed += async (sender, e) => await SetDns();
+
             timer.AutoReset = true;
             timer.Start();
 
-            SetDns();
+            Task.Run(() => SetDns());
         }
 
         protected override void OnStop()
@@ -38,8 +43,18 @@ namespace DnsOverride
             Log("DnsOverride gestoppt.");
         }
 
-        public void SetDns()
+        public async Task SetDns()
         {
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    string content = await client.GetStringAsync(url);
+                    File.WriteAllText(hosts, content);
+                }
+                catch { }
+            }
+
             try
             {
                 string[] dns = { "1.1.1.3" };
@@ -69,7 +84,7 @@ namespace DnsOverride
             }
         }
 
-        private static void Log(string message)
+        internal static void Log(string message)
         {
             try
             {
